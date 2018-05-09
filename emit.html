@@ -1,0 +1,130 @@
+<html>
+    <head>
+        <title>Unnamed Super Project</title>
+    </head>
+
+    <body>
+        <div id="app">
+        <!-- Layout front-end skeleton -->
+            <div v-if="visible" id="ask-message">
+                <h1>{{ currDate }}</h1>
+                <h3>{{ askMessageText }}</h3>
+            </div> <!-- what did you do today? -->
+            <input v-model="uInput" v-if="visible" v-on:keyup.enter="handleInput" id="user-input" placeholder="What did you do today?"></input> <!-- the input box for the user -->
+            <div id="others-message">{{ othersMessageText }}</div> <!-- here's what everyone else did today -->
+            <div id="team-data">
+                <ol>
+                    <ul v-for="mook in mooks">
+                        <li>{{ mook.name }}</li>
+                        <li>{{ mook.time }}</li>
+                        <li>{{ mook.message }}</li>
+                    </ul>
+                </ol> 
+            </div> <!-- dummy data at first, until tied to a backend -->
+        </div>
+    </body>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script> <!-- For dev -->
+    <!--<script src="https://cdn.jsdelivr.net/npm/vue"></script> For production -->
+    <script>
+        var appBridge = new Vue();
+
+        var askMessage = new Vue({
+            el: "#ask-message",
+            data: function() {
+                var today = new Date().toLocaleDateString();
+                return {
+                    askMessageText: "Let's see what you got done today!",
+                    currDate: today, 
+                    visible: true
+                };
+            },
+            created: function() {
+                appBridge.$on('hideMessage', this.hideMessage);
+            },
+            beforeDestroy: function() {
+                appBridge.$off('hideMessage', this.hideMessage);
+            },
+            methods: {
+                hideMessage: function() {
+                    this.visible=false;
+                }
+            }
+        });
+
+        var othersMessage = new Vue({
+            el: "#others-message",
+            data: function() {
+                return {
+                    othersMessageText: "Let's see what everyone else was up to!"
+                };
+            }
+        });
+
+        var userInput = new Vue({
+            el: "#user-input",
+            data: function() {
+                return {
+                    visible: true,
+                    uInput: ""
+                };
+            },
+            methods: {
+                handleInput: function() {
+                    appBridge.$emit('hideMessage');
+                    appBridge.$emit('addPost', this.uInput);
+                    this.visible = false;
+                }
+            }
+        });
+        
+        // temporary filler data until the backend gets hooked up
+        var teamData = new Vue({
+            el: "#team-data",
+            data: function() {
+                return {
+                    mooks: 
+                    [
+                        { 
+                          id: 1,
+                          name: "Axel Hyanandezzer",
+                          time: "4:20 pm",
+                          message: "Sassed my boss"
+                        },
+                        { 
+                          id: 2,
+                          name: "Billy Javanovich Malakovich",
+                          time: "3:22 pm",
+                          message: "Ate Russian bear claws"
+                        },
+                        { 
+                          id: 3,
+                          name: "Granny Granola",
+                          time: "2:40 pm",
+                          message: "Ran a 10K"
+                        }
+                    ]
+                }
+            },
+            created: function() {
+                appBridge.$on('addPost', this.addPost);
+            },
+            beforeDestroy: function() {
+                appBridge.$off('addPost', this.addPost);
+            },
+            methods: {
+                addPost: function(uInput) {
+                    var curDate = new Date();
+                    this.mooks.push(
+                        {
+                            id: 4,
+                            name: "Jurrd Hurrd McGurrd",
+                            time: curDate.toLocaleTimeString(),
+                            message: uInput
+                        }
+                    );
+                } 
+            }
+        });
+    </script>
+</html>
